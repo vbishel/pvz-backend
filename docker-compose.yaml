@@ -1,0 +1,38 @@
+services:
+  auth_service:
+    build:
+      context: ./auth-service
+      dockerfile: ./deploy/Dockerfile
+    ports:
+      - ${AUTH_APP_PORT}:${AUTH_APP_PORT}
+    environment:
+      PORT: ${AUTH_APP_PORT}
+      APP_ENV: ${AUTH_APP_ENV}
+      APP_SECRET: ${AUTH_APP_SECRET}
+      DB_HOST: psql_auth
+      DB_PORT: 5432
+      DB_DATABASE: ${AUTH_PG_DATABASE}
+      DB_USERNAME: ${AUTH_PG_USERNAME}
+      DB_PASSWORD: ${AUTH_PG_PASSWORD}
+      DB_SCHEMA: ${AUTH_PG_SCHEMA}
+    depends_on:
+      - psql_auth
+  psql_auth:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${AUTH_PG_DATABASE}
+      POSTGRES_USER: ${AUTH_PG_USERNAME}
+      POSTGRES_PASSWORD: ${AUTH_PG_PASSWORD}
+    ports:
+      - ${AUTH_PG_PORT}:5432
+    volumes:
+      - psql_auth_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_PG_USERNAME} -d ${AUTH_PG_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+volumes:
+  psql_auth_data:

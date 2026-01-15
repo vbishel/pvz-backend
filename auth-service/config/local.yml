@@ -1,0 +1,26 @@
+app:
+  name: "go-auth-service"
+  version: "1.0.0"
+
+http:
+  port: "8080"
+  cors_allow_origins: "http://localhost:3000"
+
+logger:
+  log_level: "debug"
+
+session:
+  ttl: 60m
+  cookie_key: "id"
+  cookie_domain: ""
+  cookie_secure: false
+  cookie_httponly: true
+
+csrf_token:
+  ttl: 1h
+  cookie_key: "X-CRSF-Token"
+  header_key: "CSRF-Token"
+
+access_token:
+  ttl: 60m
+  signing_key: "secret"
