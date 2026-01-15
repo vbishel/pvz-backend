@@ -2,11 +2,13 @@ package entity
 
 import "golang.org/x/crypto/bcrypt"
 
+type UserID int
+
 type User struct {
-	ID       int    `json:"id"`
+	ID       UserID `json:"id"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	Role     string `json:"role"`
+	RoleID   string `json:"role_id"`
 }
 
 func (u *User) HashPassword() error {

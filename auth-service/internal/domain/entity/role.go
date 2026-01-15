@@ -6,8 +6,7 @@ type Role struct {
 }
 
 const (
-	RoleModerator   = "moderator"
-	RolePupEmployee = "pup_employee"
-	RoleClient      = "client"
+	RoleModeratorId = 1
+	RolePupEmployeeId = 2
+	RoleClientId = 3
 )
-
