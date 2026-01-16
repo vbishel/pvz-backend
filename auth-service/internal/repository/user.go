@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"auth-service/internal/domain/entity"
+	"auth-service/internal/domain/user"
 	"auth-service/pkg/apperrors"
 	"auth-service/pkg/database/postgres"
 	"context"
@@ -20,11 +20,11 @@ type userRepository struct {
 	*postgres.Postgres
 }
 
-func NewUserRepository(pg *postgres.Postgres) *userRepository {
+func NewUserRepository(pg *postgres.Postgres) user.UserRepository {
 	return &userRepository{pg}
 }
 
-func (r *userRepository) Create(ctx context.Context, u entity.User) (entity.UserID, error) {
+func (r *userRepository) Create(ctx context.Context, u user.User) (user.UserID, error) {
 	sql, args, err := r.Builder.
 		Insert(usersTable).
 		Columns("email, password, role_id").
@@ -35,7 +35,7 @@ func (r *userRepository) Create(ctx context.Context, u entity.User) (entity.User
 		return 0, fmt.Errorf("r.Builder.Insert: %w", err)
 	}
 
-	var uid entity.UserID
+	var uid user.UserID
 
 	if err = r.Pool.QueryRow(ctx, sql, args...).Scan(&uid); err != nil {
 		var pgErr *pgconn.PgError
@@ -50,56 +50,56 @@ func (r *userRepository) Create(ctx context.Context, u entity.User) (entity.User
 	return uid, nil
 }
 
-func (r *userRepository) Find(ctx context.Context, id entity.UserID) (entity.User, error) {
+func (r *userRepository) Find(ctx context.Context, id user.UserID) (user.User, error) {
 	sql, args, err := r.Builder.
 		Select("email, password").
 		From(usersTable).
 		Where(squirrel.Eq{"id": id}).
 		ToSql()
 	if err != nil {
-		return entity.User{}, fmt.Errorf("r.Builder.Select: %w", err)
+		return user.User{}, fmt.Errorf("r.Builder.Select: %w", err)
 	}
 
-	user := entity.User{ID: id}
+	u := user.User{ID: id}
 
 	if err = r.Pool.QueryRow(ctx, sql, args...).Scan(
-		&user.Email,
-		&user.Password,
+		&u.Email,
+		&u.Password,
 	); err != nil {
 		if err == pgx.ErrNoRows {
-			return entity.User{}, fmt.Errorf("r.Pool.QueryRow.Scan: %w", apperrors.ErrUserNotFound)
+			return user.User{}, fmt.Errorf("r.Pool.QueryRow.Scan: %w", apperrors.ErrUserNotFound)
 		}
 
-		return entity.User{}, fmt.Errorf("r.Pool.QueryRow.Scan: %w", err)
+		return user.User{}, fmt.Errorf("r.Pool.QueryRow.Scan: %w", err)
 	}
 
-	return user, nil
+	return u, nil
 }
 
-func (r *userRepository) FindByEmail(ctx context.Context, email string) (entity.User, error) {
+func (r *userRepository) FindByEmail(ctx context.Context, email string) (user.User, error) {
 	sql, args, err := r.Builder.
 		Select("id, password").
 		From(usersTable).
 		Where(squirrel.Eq{"email": email}).
 		ToSql()
 	if err != nil {
-		return entity.User{}, fmt.Errorf("r.Builder.Select: %w", err)
+		return user.User{}, fmt.Errorf("r.Builder.Select: %w", err)
 	}
 
-	user := entity.User{Email: email}
+	u := user.User{Email: email}
 
 	if err = r.Pool.QueryRow(ctx, sql, args...).Scan(
-		&user.ID,
-		&user.Password,
+		&u.ID,
+		&u.Password,
 	); err != nil {
 		if err == pgx.ErrNoRows {
-			return entity.User{}, fmt.Errorf("r.Pool.QueryRow.Scan: %w", apperrors.ErrUserNotFound)
+			return user.User{}, fmt.Errorf("r.Pool.QueryRow.Scan: %w", apperrors.ErrUserNotFound)
 		}
 
-		return entity.User{}, fmt.Errorf("r.Pool.QueryRow.Scan: %w", err)
+		return user.User{}, fmt.Errorf("r.Pool.QueryRow.Scan: %w", err)
 	}
 
-	return user, nil
+	return u, nil
 }
 
 

@@ -1,7 +1,7 @@
 package jwt
 
 import (
-	"auth-service/internal/domain/entity"
+	"auth-service/internal/domain/user"
 	"errors"
 	"fmt"
 	"time"
@@ -23,7 +23,7 @@ type Claims struct {
 }
 
 func NewToken(
-	user *entity.User,
+	user *user.User,
 	duration time.Duration,
 	signingKey string,
 ) (string, error) {

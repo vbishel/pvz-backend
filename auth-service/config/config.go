@@ -5,16 +5,22 @@ import "time"
 type (
 	Config struct {
 		App         `yaml:"app"`
+		GinCtx      `yaml:"gin_ctx"`
 		HTTP        `yaml:"http"`
 		Log         `yaml:"logger"`
 		Postgres    `yaml:"postgres"`
 		AccessToken `yaml:"access_token"`
-		CSRFToken   `yaml:"csrf_token"`
 	}
 
 	App struct {
 		Name    string `env-required:"true" yaml:"name"    env:"APP_NAME"`
 		Version string `env-required:"true" yaml:"version" env:"APP_VERSION"`
+		Env     string `env-required:"true" yaml:"app_env" env:"APP_ENV"`
+	}
+
+	GinCtx struct {
+		EmailKey  string `yaml:"email_key" env:"GIN_EMAIL_KEY"`
+		UserIDKey string `yaml:"user_id_key" env:"GIN_USER_ID_KEY"`
 	}
 
 	HTTP struct {
@@ -37,12 +43,7 @@ type (
 
 	AccessToken struct {
 		TTL        time.Duration `env-required:"true" yaml:"ttl" env:"ACCESS_TOKEN_TTL"`
+		CookieKey  string        `env-required:"true" yaml:"cookie_key" env:"ACCESS_TOKEN_COOKIE_KEY"`
 		SigningKey string        `env-required:"true" yaml:"signing_key" env:"ACCESS_TOKEN_SIGNING_KEY"`
-	}
-
-	CSRFToken struct {
-		TTL       time.Duration `env-required:"true" yaml:"ttl"        env:"CSRF_TOKEN_TTL"`
-		CookieKey string        `env-required:"true" yaml:"cookie_key" env:"CSRF_TOKEN_COOKIE_KEY"`
-		HeaderKey string        `env-requried:"true" yaml:"header_key" env:"CSRF_TOKEN_HEADER_KEY"`
 	}
 )

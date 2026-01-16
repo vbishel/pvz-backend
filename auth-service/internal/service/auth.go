@@ -1,8 +1,8 @@
-package auth
+package service
 
 import (
 	"auth-service/config"
-	"auth-service/internal/domain/entity"
+	"auth-service/internal/domain/user"
 	"auth-service/internal/lib/jwt"
 	"auth-service/internal/lib/logger/sl"
 	"auth-service/pkg/apperrors"
@@ -11,42 +11,53 @@ import (
 	"log/slog"
 )
 
-type UserRepository interface {
-	Create(ctx context.Context, u entity.User) (entity.UserID, error)
-	Find(ctx context.Context, id entity.UserID) (entity.User, error)
-	FindByEmail(ctx context.Context, email string) (entity.User, error)
-}
-
 type authService struct {
-	log            *slog.Logger
-	cfg            *config.Config
-	userRepository UserRepository
+	log         *slog.Logger
+	cfg         *config.Config
+	userFinder  UserFinder
+	userCreator UserCreator
 }
 
-func New(userRepository UserRepository, cfg *config.Config) *authService {
+type UserCreator interface {
+	Create(
+		ctx context.Context,
+		email string,
+		passwordHash string,
+	) (user.UserID, error)
+}
+
+type UserFinder interface {
+	FindByEmail(
+		ctx context.Context,
+		email string,
+	) (user.User, error)
+}
+
+func New(log *slog.Logger, cfg *config.Config, userFinder UserFinder, userCreator UserCreator) *authService {
 	return &authService{
-		userRepository: userRepository,
-		cfg:            cfg,
+		cfg:         cfg,
+		userFinder:  userFinder,
+		userCreator: userCreator,
 	}
 }
 
-func (s *authService) Register(ctx context.Context, registerDTO RegisterDTO) (entity.UserID, error) {
+func (s *authService) Register(ctx context.Context, email, password string) (user.UserID, error) {
 	const op = "AuthService.Register"
 
 	log := s.log.With(
 		slog.String("op", op),
-		slog.String("email", registerDTO.email),
+		slog.String("email", email),
 	)
 
 	log.Info("attemtping to register user")
 
-	u := entity.User{
-		Email:    registerDTO.email,
-		Password: registerDTO.password,
+	u := user.User{
+		Email:    email,
+		Password: password,
 	}
 	u.HashPassword()
 
-	uid, err := s.userRepository.Create(ctx, u)
+	uid, err := s.userCreator.Create(ctx, u.Email, u.Password)
 	if err != nil {
 		log.Error("failed to create user", sl.Err(err))
 		return 0, err
@@ -57,17 +68,17 @@ func (s *authService) Register(ctx context.Context, registerDTO RegisterDTO) (en
 	return uid, nil
 }
 
-func (s *authService) Login(ctx context.Context, loginDTO LoginDTO) (string, error) {
+func (s *authService) Login(ctx context.Context, email, password string) (string, error) {
 	const op = "AuthService.Login"
 
 	log := s.log.With(
 		slog.String("op", op),
-		slog.String("email", loginDTO.email),
+		slog.String("email", email),
 	)
 
 	log.Info("attempting to login user")
 
-	u, err := s.userRepository.FindByEmail(ctx, loginDTO.email)
+	u, err := s.userFinder.FindByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrUserNotFound) {
 			log.Warn("user not found", sl.Err(err))
