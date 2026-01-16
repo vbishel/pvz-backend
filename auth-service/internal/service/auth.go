@@ -5,7 +5,6 @@ import (
 	"auth-service/internal/domain/role"
 	"auth-service/internal/domain/user"
 	"auth-service/internal/lib/jwt"
-	"auth-service/internal/lib/logger/sl"
 	"auth-service/pkg/apperrors"
 	"context"
 	"errors"
@@ -13,7 +12,6 @@ import (
 )
 
 type authService struct {
-	log         *slog.Logger
 	cfg         *config.Config
 	userFinder  UserFinder
 	userCreator UserCreator
@@ -44,15 +42,6 @@ func NewAuthService(log *slog.Logger, cfg *config.Config, userFinder UserFinder,
 }
 
 func (s *authService) Register(ctx context.Context, email, password string) (user.UserID, error) {
-	const op = "AuthService.Register"
-
-	log := s.log.With(
-		slog.String("op", op),
-		slog.String("email", email),
-	)
-
-	log.Info("attemtping to register user")
-
 	u := user.User{
 		Email:    email,
 		Password: password,
@@ -61,33 +50,19 @@ func (s *authService) Register(ctx context.Context, email, password string) (use
 
 	uid, err := s.userCreator.Create(ctx, u.Email, u.Password, role.RoleClientId)
 	if err != nil {
-		log.Error("failed to create user", sl.Err(err))
 		return 0, err
 	}
-
-	log.Info("registered new user", "UserID", uid)
 
 	return uid, nil
 }
 
 func (s *authService) Login(ctx context.Context, email, password string) (string, error) {
-	const op = "AuthService.Login"
-
-	log := s.log.With(
-		slog.String("op", op),
-		slog.String("email", email),
-	)
-
-	log.Info("attempting to login user")
-
 	u, err := s.userFinder.FindByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrUserNotFound) {
-			log.Warn("user not found", sl.Err(err))
 			return "", apperrors.ErrUserIncorrectEmailOrPassword
 		}
 
-		log.Error("failed to get user", sl.Err(err))
 		return "", err
 	}
 
@@ -99,8 +74,6 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 	if err != nil {
 		return "", err
 	}
-
-	log.Info("user logged in")
 
 	return token, nil
 }

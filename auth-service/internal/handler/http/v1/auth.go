@@ -2,6 +2,7 @@ package v1
 
 import (
 	"auth-service/config"
+	"auth-service/internal/lib/logger/sl"
 	"auth-service/pkg/apperrors"
 	"context"
 	"errors"
@@ -38,18 +39,34 @@ type registerDTO struct {
 }
 
 func (h *authHandler) register(c *gin.Context) {
+	const op = "http.v1.register"
+	
+	log := h.log.With(
+		slog.String("op", op),
+	)
+
+	log.Info("trying to register user")
 	var data registerDTO
 	if err := c.ShouldBindJSON(&data); err != nil {
+		log.Warn("validation failed", sl.Err(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	_, err := h.authService.Register(context.Background(), data.Email, data.Password)
+	uid, err := h.authService.Register(context.Background(), data.Email, data.Password)
 	if err != nil {
+		if errors.Is(err, apperrors.ErrUserAlreadyExists) {
+			log.Warn("user already exists", "email", data.Email)
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		log.Error("registration failed", "email", data.Email)
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
+	log.Info("user registered successfully", "userid", uid)
 	c.JSON(http.StatusCreated, gin.H{"message": "success"})
 }
 
