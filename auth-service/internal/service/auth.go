@@ -2,6 +2,7 @@ package service
 
 import (
 	"auth-service/config"
+	"auth-service/internal/domain/role"
 	"auth-service/internal/domain/user"
 	"auth-service/internal/lib/jwt"
 	"auth-service/internal/lib/logger/sl"
@@ -23,6 +24,7 @@ type UserCreator interface {
 		ctx context.Context,
 		email string,
 		passwordHash string,
+		roleID int,
 	) (user.UserID, error)
 }
 
@@ -33,7 +35,7 @@ type UserFinder interface {
 	) (user.User, error)
 }
 
-func New(log *slog.Logger, cfg *config.Config, userFinder UserFinder, userCreator UserCreator) *authService {
+func NewAuthService(log *slog.Logger, cfg *config.Config, userFinder UserFinder, userCreator UserCreator) *authService {
 	return &authService{
 		cfg:         cfg,
 		userFinder:  userFinder,
@@ -57,7 +59,7 @@ func (s *authService) Register(ctx context.Context, email, password string) (use
 	}
 	u.HashPassword()
 
-	uid, err := s.userCreator.Create(ctx, u.Email, u.Password)
+	uid, err := s.userCreator.Create(ctx, u.Email, u.Password, role.RoleClientId)
 	if err != nil {
 		log.Error("failed to create user", sl.Err(err))
 		return 0, err

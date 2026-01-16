@@ -24,11 +24,11 @@ func NewUserRepository(pg *postgres.Postgres) user.UserRepository {
 	return &userRepository{pg}
 }
 
-func (r *userRepository) Create(ctx context.Context, u user.User) (user.UserID, error) {
+func (r *userRepository) Create(ctx context.Context, email, hashPassword string, roleID int) (user.UserID, error) {
 	sql, args, err := r.Builder.
 		Insert(usersTable).
 		Columns("email, password, role_id").
-		Values(u.Email, u.Password, u.RoleID).
+		Values(email, hashPassword, roleID).
 		Suffix("RETURNING ID").
 		ToSql()
 	if err != nil {

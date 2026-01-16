@@ -8,7 +8,7 @@ type User struct {
 	ID       UserID `json:"id"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	RoleID   string `json:"role_id"`
+	RoleID   int    `json:"role_id"`
 }
 
 func (u *User) HashPassword() error {

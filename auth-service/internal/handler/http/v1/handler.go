@@ -2,8 +2,6 @@ package v1
 
 import (
 	"auth-service/config"
-	"auth-service/internal/domain/user"
-	"context"
 	"log/slog"
 	"strings"
 
@@ -13,16 +11,12 @@ import (
 
 const apiPath = "/v1"
 
-type AuthService interface {
-	Register(ctx context.Context, email, password string) (user.UserID, error)
-	Login(ctx context.Context, email, password string) (string, error)
-}
-
 func SetupHandlers(
 	handler *gin.Engine,
 	log *slog.Logger,
 	cfg *config.Config,
 	authService AuthService,
+	usersService UsersService,
 ) {
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
