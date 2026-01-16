@@ -4,7 +4,12 @@ import "time"
 
 type (
 	Config struct {
-		App `yaml:"app"`
+		App         `yaml:"app"`
+		HTTP        `yaml:"http"`
+		Log         `yaml:"logger"`
+		Postgres    `yaml:"postgres"`
+		AccessToken `yaml:"access_token"`
+		CSRFToken   `yaml:"csrf_token"`
 	}
 
 	App struct {
@@ -30,7 +35,12 @@ type (
 		Schema   string `env-required:"true" env:"PG_SCHEMA"`
 	}
 
-	CRSFToken struct {
+	AccessToken struct {
+		TTL        time.Duration `env-required:"true" yaml:"ttl" env:"ACCESS_TOKEN_TTL"`
+		SigningKey string        `env-required:"true" yaml:"signing_key" env:"ACCESS_TOKEN_SIGNING_KEY"`
+	}
+
+	CSRFToken struct {
 		TTL       time.Duration `env-required:"true" yaml:"ttl"        env:"CSRF_TOKEN_TTL"`
 		CookieKey string        `env-required:"true" yaml:"cookie_key" env:"CSRF_TOKEN_COOKIE_KEY"`
 		HeaderKey string        `env-requried:"true" yaml:"header_key" env:"CSRF_TOKEN_HEADER_KEY"`
