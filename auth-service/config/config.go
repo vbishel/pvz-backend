@@ -5,7 +5,6 @@ import "time"
 type (
 	Config struct {
 		App         `yaml:"app"`
-		GinCtx      `yaml:"gin_ctx"`
 		HTTP        `yaml:"http"`
 		Log         `yaml:"logger"`
 		Postgres    `yaml:"postgres"`
@@ -16,11 +15,6 @@ type (
 		Name    string `env-required:"true" yaml:"name"    env:"APP_NAME"`
 		Version string `env-required:"true" yaml:"version" env:"APP_VERSION"`
 		Env     string `env-required:"true" yaml:"app_env" env:"APP_ENV"`
-	}
-
-	GinCtx struct {
-		EmailKey  string `yaml:"email_key" env:"GIN_EMAIL_KEY"`
-		UserIDKey string `yaml:"user_id_key" env:"GIN_USER_ID_KEY"`
 	}
 
 	HTTP struct {
