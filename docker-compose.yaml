@@ -43,15 +43,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-  nginx:
-    image: nginx:1.29
-    container_name: msger_nginx
-    ports:
-      - 80:80
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - auth_service
   auth_service_migrator:
     build:
       context: ./auth-service
@@ -72,5 +63,80 @@ services:
     depends_on:
       psql_auth:
         condition: service_healthy
+  orders_service:
+    build:
+      context: ./orders-service
+      dockerfile: ./deploy/Dockerfile
+    ports:
+      - ${ORDERS_APP_PORT}:${ORDERS_APP_PORT}
+    environment:
+      PORT: ${ORDERS_APP_PORT}
+      APP_ENV: ${ORDERS_APP_ENV}
+      APP_SECRET: ${ORDERS_APP_SECRET}
+      PG_HOST: psql_orders
+      PG_PORT: 5432
+      PG_DATABASE: ${ORDERS_PG_DATABASE}
+      PG_USERNAME: ${ORDERS_PG_USERNAME}
+      PG_PASSWORD: ${ORDERS_PG_PASSWORD}
+      PG_SCHEMA: ${ORDERS_PG_SCHEMA}
+      ACCESS_TOKEN_SIGNING_KEY: ${ORDERS_ACCESS_TOKEN_SIGNING_KEY}
+      CONFIG_PATH: ${ORDERS_CONFIG_PATH}
+    depends_on:
+      psql_orders:
+        condition: service_healthy
+      orders_service_migrator:
+        condition: service_completed_successfully
+  psql_orders:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${ORDERS_PG_DATABASE}
+      POSTGRES_USER: ${ORDERS_PG_USERNAME}
+      POSTGRES_PASSWORD: ${ORDERS_PG_PASSWORD}
+    ports:
+      - ${ORDERS_PG_PORT}:5432
+    volumes:
+      - psql_orders_data:/var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${ORDERS_PG_USERNAME} -d ${ORDERS_PG_DATABASE}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  orders_service_migrator:
+    build:
+      context: ./auth-service
+      dockerfile: ./deploy/Dockerfile.migrator
+    environment:
+      PORT: ${ORDERS_APP_PORT}
+      APP_ENV: ${ORDERS_APP_ENV}
+      APP_SECRET: ${ORDERS_APP_SECRET}
+      PG_HOST: psql_orders
+      PG_PORT: 5432
+      PG_DATABASE: ${ORDERS_PG_DATABASE}
+      PG_USERNAME: ${ORDERS_PG_USERNAME}
+      PG_PASSWORD: ${ORDERS_PG_PASSWORD}
+      PG_SCHEMA: ${ORDERS_PG_SCHEMA}
+      ACCESS_TOKEN_SIGNING_KEY: ${ORDERS_ACCESS_TOKEN_SIGNING_KEY}
+      CONFIG_PATH: ${ORDERS_CONFIG_PATH}
+    restart: no
+    depends_on:
+      psql_orders:
+        condition: service_healthy
+  nginx:
+    image: nginx:1.29
+    container_name: msger_nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth_service
+      - orders_service
 volumes:
   psql_auth_data:
+  psql_orders_data:
