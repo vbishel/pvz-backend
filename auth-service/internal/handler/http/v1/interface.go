@@ -11,7 +11,7 @@ type AuthService interface {
 }
 
 type UsersService interface {
-	Create(ctx context.Context, email, password string) (user.UserID, error)
+	Create(ctx context.Context, email, password string, roleID int) (user.UserID, error)
 	Find(ctx context.Context, id user.UserID) (user.User, error)
 	FindByEmail(ctx context.Context, email string) (user.User, error)
 }

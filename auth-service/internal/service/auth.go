@@ -1,7 +1,7 @@
 package service
 
 import (
-	"auth-service/config"
+	"auth-service/internal/config"
 	"auth-service/internal/domain/role"
 	"auth-service/internal/domain/user"
 	"auth-service/internal/lib/jwt"

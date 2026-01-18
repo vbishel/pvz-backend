@@ -1,21 +1,18 @@
 app:
-  name: "go-auth-service"
+  name: "auth-service"
   version: "1.0.0"
+  app_env: "development"
 
 http:
   port: "8080"
-  cors_allow_origins: "http://localhost:3000"
+  cors_allow_origins: "http://localhost:5173"
 
 logger:
   log_level: "debug"
 
-session:
-  ttl: 60m
-  cookie_key: "id"
-  cookie_domain: ""
-  cookie_secure: false
-  cookie_httponly: true
+postgres:
+  pool_max: 10
 
 access_token:
-  ttl: 60m
-  signing_key: "secret"
+  ttl: 24h
+  cookie_key: "access_token"

@@ -1,6 +1,12 @@
 package config
 
-import "time"
+import (
+	"flag"
+	"os"
+	"time"
+
+	"github.com/ilyakaznacheev/cleanenv"
+)
 
 type (
 	Config struct {
@@ -33,11 +39,48 @@ type (
 		Username string `env-required:"true" env:"PG_USERNAME"`
 		Password string `env-required:"true" env:"PG_PASSWORD"`
 		Schema   string `env-required:"true" env:"PG_SCHEMA"`
+		PoolMax  int    `env-required:"true" env:"PG_POOLMAX" yaml:"pool_max"`
 	}
 
 	AccessToken struct {
 		TTL        time.Duration `env-required:"true" yaml:"ttl" env:"ACCESS_TOKEN_TTL"`
 		CookieKey  string        `env-required:"true" yaml:"cookie_key" env:"ACCESS_TOKEN_COOKIE_KEY"`
-		SigningKey string        `env-required:"true" yaml:"signing_key" env:"ACCESS_TOKEN_SIGNING_KEY"`
+		SigningKey string        `env-required:"true" env:"ACCESS_TOKEN_SIGNING_KEY"`
 	}
 )
+
+func MustLoad() *Config {
+	configPath := fetchConfigPath()
+	if configPath == "" {
+		panic("config path is empty")
+	}
+
+	return MustLoadPath(configPath)
+}
+
+func MustLoadPath(configPath string) *Config {
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		panic("config file does not exist: " + configPath)
+	}
+
+	var cfg Config
+
+	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+		panic("cannot read config: " + err.Error())
+	}
+
+	return &cfg
+}
+
+func fetchConfigPath() string {
+	var res string
+	
+	flag.StringVar(&res, "config", "", "path to config file")
+	flag.Parse()
+
+	if res == "" {
+		res = os.Getenv("CONFIG_PATH")
+	}
+
+	return res
+}

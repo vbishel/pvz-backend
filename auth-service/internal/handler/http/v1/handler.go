@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"auth-service/config"
+	"auth-service/internal/config"
 	"log/slog"
 	"strings"
 

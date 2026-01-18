@@ -1,7 +1,12 @@
 package main
 
-import "auth-service/internal/app"
+import (
+	"auth-service/internal/config"
+	"auth-service/internal/app"
+)
 
 func main() {
-	app.MustRun()
+	cfg := config.MustLoad()
+	
+	app.MustRun(cfg)
 }
