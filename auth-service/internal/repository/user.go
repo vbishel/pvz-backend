@@ -53,7 +53,7 @@ func (r *userRepository) Create(ctx context.Context, email, hashPassword string)
 
 func (r *userRepository) Find(ctx context.Context, id user.UserID) (user.User, error) {
 	sql, args, err := r.Builder.
-		Select("email, password").
+		Select("email, password, role_id").
 		From(usersTable).
 		Where(squirrel.Eq{"id": id}).
 		ToSql()
@@ -66,6 +66,7 @@ func (r *userRepository) Find(ctx context.Context, id user.UserID) (user.User, e
 	if err = r.Pool.QueryRow(ctx, sql, args...).Scan(
 		&u.Email,
 		&u.Password,
+		&u.RoleID,
 	); err != nil {
 		if err == pgx.ErrNoRows {
 			return user.User{}, fmt.Errorf("r.Pool.QueryRow.Scan: %w", apperrors.ErrUserNotFound)
@@ -79,7 +80,7 @@ func (r *userRepository) Find(ctx context.Context, id user.UserID) (user.User, e
 
 func (r *userRepository) FindByEmail(ctx context.Context, email string) (user.User, error) {
 	sql, args, err := r.Builder.
-		Select("id, password").
+		Select("id, password, role_id").
 		From(usersTable).
 		Where(squirrel.Eq{"email": email}).
 		ToSql()
@@ -92,6 +93,7 @@ func (r *userRepository) FindByEmail(ctx context.Context, email string) (user.Us
 	if err = r.Pool.QueryRow(ctx, sql, args...).Scan(
 		&u.ID,
 		&u.Password,
+		&u.RoleID,
 	); err != nil {
 		if err == pgx.ErrNoRows {
 			return user.User{}, fmt.Errorf("r.Pool.QueryRow.Scan: %w", apperrors.ErrUserNotFound)
@@ -102,4 +104,3 @@ func (r *userRepository) FindByEmail(ctx context.Context, email string) (user.Us
 
 	return u, nil
 }
-
