@@ -103,6 +103,12 @@ func (h *authHandler) login(c *gin.Context) {
 			return
 		}
 
+		if errors.Is(err, apperrors.ErrUserNotFound) {
+			log.Warn("login failed: user does not exist", "email", data.Email)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "user does not exist"})
+			return
+		}
+
 		log.Error("login failed: internal server error", sl.Err(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
@@ -232,6 +238,6 @@ func (h *authHandler) validateToken(c *gin.Context) {
 	log.Info("token successfuly validated", "userID", idint)
 	c.JSON(http.StatusOK, gin.H{
 		"email": email,
-		"id": id,
+		"id":    id,
 	})
 }

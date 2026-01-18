@@ -2,7 +2,6 @@ package service
 
 import (
 	"auth-service/internal/config"
-	"auth-service/internal/domain/role"
 	"auth-service/internal/domain/user"
 	"auth-service/internal/lib/jwt"
 	"auth-service/pkg/apperrors"
@@ -13,6 +12,7 @@ import (
 
 type authService struct {
 	cfg         *config.Config
+	log         *slog.Logger
 	userFinder  UserFinder
 	userCreator UserCreator
 }
@@ -22,7 +22,6 @@ type UserCreator interface {
 		ctx context.Context,
 		email string,
 		passwordHash string,
-		roleID int,
 	) (user.UserID, error)
 }
 
@@ -35,6 +34,7 @@ type UserFinder interface {
 
 func NewAuthService(log *slog.Logger, cfg *config.Config, userFinder UserFinder, userCreator UserCreator) *authService {
 	return &authService{
+		log:         log,
 		cfg:         cfg,
 		userFinder:  userFinder,
 		userCreator: userCreator,
@@ -48,7 +48,7 @@ func (s *authService) Register(ctx context.Context, email, password string) (use
 	}
 	u.HashPassword()
 
-	uid, err := s.userCreator.Create(ctx, u.Email, u.Password, role.RoleClientId)
+	uid, err := s.userCreator.Create(ctx, u.Email, u.Password)
 	if err != nil {
 		return 0, err
 	}
@@ -60,13 +60,13 @@ func (s *authService) Login(ctx context.Context, email, password string) (string
 	u, err := s.userFinder.FindByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, apperrors.ErrUserNotFound) {
-			return "", apperrors.ErrUserIncorrectEmailOrPassword
+			return "", apperrors.ErrUserNotFound
 		}
 
 		return "", err
 	}
 
-	if ok := u.CheckPassword(u.Password); !ok {
+	if ok := u.CheckPassword(password); !ok {
 		return "", apperrors.ErrUserIncorrectEmailOrPassword
 	}
 

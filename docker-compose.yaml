@@ -9,14 +9,19 @@ services:
       PORT: ${AUTH_APP_PORT}
       APP_ENV: ${AUTH_APP_ENV}
       APP_SECRET: ${AUTH_APP_SECRET}
-      DB_HOST: psql_auth
-      DB_PORT: 5432
-      DB_DATABASE: ${AUTH_PG_DATABASE}
-      DB_USERNAME: ${AUTH_PG_USERNAME}
-      DB_PASSWORD: ${AUTH_PG_PASSWORD}
-      DB_SCHEMA: ${AUTH_PG_SCHEMA}
+      PG_HOST: psql_auth
+      PG_PORT: 5432
+      PG_DATABASE: ${AUTH_PG_DATABASE}
+      PG_USERNAME: ${AUTH_PG_USERNAME}
+      PG_PASSWORD: ${AUTH_PG_PASSWORD}
+      PG_SCHEMA: ${AUTH_PG_SCHEMA}
+      ACCESS_TOKEN_SIGNING_KEY: ${AUTH_ACCESS_TOKEN_SIGNING_KEY}
+      CONFIG_PATH: ${AUTH_CONFIG_PATH}
     depends_on:
-      - psql_auth
+      psql_auth:
+        condition: service_healthy
+      auth_service_migrator:
+        condition: service_completed_successfully
   psql_auth:
     image: postgres:18
     restart: unless-stopped
@@ -34,5 +39,25 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+  auth_service_migrator:
+    build:
+      context: ./auth-service
+      dockerfile: ./deploy/Dockerfile.migrator
+    environment:
+      PORT: ${AUTH_APP_PORT}
+      APP_ENV: ${AUTH_APP_ENV}
+      APP_SECRET: ${AUTH_APP_SECRET}
+      PG_HOST: psql_auth
+      PG_PORT: 5432
+      PG_DATABASE: ${AUTH_PG_DATABASE}
+      PG_USERNAME: ${AUTH_PG_USERNAME}
+      PG_PASSWORD: ${AUTH_PG_PASSWORD}
+      PG_SCHEMA: ${AUTH_PG_SCHEMA}
+      ACCESS_TOKEN_SIGNING_KEY: ${AUTH_ACCESS_TOKEN_SIGNING_KEY}
+      CONFIG_PATH: ${AUTH_CONFIG_PATH}
+    restart: no
+    depends_on:
+      psql_auth:
+        condition: service_healthy
 volumes:
   psql_auth_data:

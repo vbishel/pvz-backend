@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"auth-service/internal/domain/role"
 	"auth-service/internal/domain/user"
 	"auth-service/pkg/apperrors"
 	"auth-service/pkg/database/postgres"
@@ -24,11 +25,11 @@ func NewUserRepository(pg *postgres.Postgres) user.UserRepository {
 	return &userRepository{pg}
 }
 
-func (r *userRepository) Create(ctx context.Context, email, hashPassword string, roleID int) (user.UserID, error) {
+func (r *userRepository) Create(ctx context.Context, email, hashPassword string) (user.UserID, error) {
 	sql, args, err := r.Builder.
 		Insert(usersTable).
 		Columns("email, password, role_id").
-		Values(email, hashPassword, roleID).
+		Values(email, hashPassword, role.RoleClientId).
 		Suffix("RETURNING ID").
 		ToSql()
 	if err != nil {

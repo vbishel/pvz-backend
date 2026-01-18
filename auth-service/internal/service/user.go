@@ -9,19 +9,21 @@ import (
 )
 
 type usersService struct {
-	cfg *config.Config
+	cfg             *config.Config
+	log             *slog.Logger
 	usersRepository user.UserRepository
 }
 
 func NewUsersService(log *slog.Logger, cfg *config.Config, usersRepository user.UserRepository) *usersService {
 	return &usersService{
-		cfg: cfg,
+		log:             log,
+		cfg:             cfg,
 		usersRepository: usersRepository,
 	}
 }
 
-func (s *usersService) Create(ctx context.Context, email, hashPassword string, roleID int) (user.UserID, error) {
-	u, err := s.usersRepository.Create(ctx, email, hashPassword, roleID)
+func (s *usersService) Create(ctx context.Context, email, hashPassword string) (user.UserID, error) {
+	u, err := s.usersRepository.Create(ctx, email, hashPassword)
 	if err != nil {
 		return 0, err
 	}
