@@ -9,6 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+
+const (
+	UserIDContextKey    = "userID"
+	UserEmailContextKey = "email"
+)
+
 const apiPath = "/v1"
 
 func SetupHandlers(
@@ -26,5 +32,8 @@ func SetupHandlers(
 	corsCfg.AllowCredentials = true
 
 	handler.Use(cors.New(corsCfg))
+
+	h := handler.Group(apiPath)
+	newAuthHandler(h, log, cfg, authService, usersService)
 }
 

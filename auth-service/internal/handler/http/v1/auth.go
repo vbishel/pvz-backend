@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,11 +19,6 @@ type authHandler struct {
 	authService  AuthService
 	usersService UsersService
 }
-
-const (
-	UserIDContextKey    = "userID"
-	UserEmailContextKey = "email"
-)
 
 func newAuthHandler(handler *gin.RouterGroup, log *slog.Logger, cfg *config.Config, auth AuthService, users UsersService) {
 	h := &authHandler{
@@ -35,8 +31,11 @@ func newAuthHandler(handler *gin.RouterGroup, log *slog.Logger, cfg *config.Conf
 	g := handler.Group("/auth")
 	g.POST("/login", h.login)
 	g.POST("/register", h.register)
-	g.POST("/logout", h.logout)
-	g.GET("/me", h.me)
+
+	protected := g.Group("/").Use(tokenMiddleware(log, cfg))
+	protected.POST("/logout", h.logout)
+	protected.GET("/me", h.me)
+	protected.GET("/validate-token", h.validateToken)
 }
 
 type registerDTO struct {
@@ -190,5 +189,49 @@ func (h *authHandler) me(c *gin.Context) {
 		"id":      u.ID,
 		"email":   u.Email,
 		"role_id": u.RoleID,
+	})
+}
+
+func (h *authHandler) validateToken(c *gin.Context) {
+	const op = "handlers.HandleValidateToken"
+
+	log := h.log.With(
+		slog.String("op", op),
+	)
+
+	email, ok := c.Get(UserEmailContextKey)
+	if !ok {
+		log.Warn("failed to parse user email from token")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	id, ok := c.Get(UserIDContextKey)
+	if !ok {
+		log.Warn("failed to parse user id from token")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	idint, ok := id.(int)
+	if !ok {
+		log.Warn("failed to convert uid to int", "userID", id)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	emailstr, ok := email.(string)
+	if !ok {
+		log.Warn("failed to convert email to string", "email", email)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	c.Header("X-User-ID", strconv.Itoa(idint))
+	c.Header("X-User-Email", emailstr)
+
+	log.Info("token successfuly validated", "userID", idint)
+	c.JSON(http.StatusOK, gin.H{
+		"email": email,
+		"id": id,
 	})
 }
