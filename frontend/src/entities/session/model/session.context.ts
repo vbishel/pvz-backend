@@ -2,7 +2,7 @@ import React, { use } from "react";
 import type { Session } from "./session.types";
 
 type ContextProps = {
-    isAuthorized: boolean;
+    isAuthenticated: boolean;
     session?: Session;
 }
 
@@ -25,5 +25,5 @@ export const useProtectedSessionContext = () => {
         throw new Error("Use protected session context only when user is guaranteed to be logged in")
     }
 
-    return context;
+    return context as Required<ContextProps>;
 }

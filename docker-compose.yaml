@@ -4,9 +4,9 @@ services:
       context: ./auth-service
       dockerfile: ./deploy/Dockerfile
     ports:
-      - ${AUTH_APP_PORT}:${AUTH_APP_PORT}
+      - ${AUTH_HTTP_PORT}:${AUTH_HTTP_PORT}
     environment:
-      PORT: ${AUTH_APP_PORT}
+      HTTP_PORT: ${AUTH_HTTP_PORT}
       APP_ENV: ${AUTH_APP_ENV}
       APP_SECRET: ${AUTH_APP_SECRET}
       PG_HOST: psql_auth
@@ -48,7 +48,7 @@ services:
       context: ./auth-service
       dockerfile: ./deploy/Dockerfile.migrator
     environment:
-      PORT: ${AUTH_APP_PORT}
+      HTTP_PORT: ${AUTH_HTTP_PORT}
       APP_ENV: ${AUTH_APP_ENV}
       APP_SECRET: ${AUTH_APP_SECRET}
       PG_HOST: psql_auth
@@ -68,9 +68,9 @@ services:
       context: ./orders-service
       dockerfile: ./deploy/Dockerfile
     ports:
-      - ${ORDERS_APP_PORT}:${ORDERS_APP_PORT}
+      - ${ORDERS_HTTP_PORT}:${ORDERS_HTTP_PORT}
     environment:
-      PORT: ${ORDERS_APP_PORT}
+      HTTP_PORT: ${ORDERS_HTTP_PORT}
       APP_ENV: ${ORDERS_APP_ENV}
       APP_SECRET: ${ORDERS_APP_SECRET}
       PG_HOST: psql_orders
@@ -112,7 +112,7 @@ services:
       context: ./auth-service
       dockerfile: ./deploy/Dockerfile.migrator
     environment:
-      PORT: ${ORDERS_APP_PORT}
+      HTTP_PORT: ${ORDERS_HTTP_PORT}
       APP_ENV: ${ORDERS_APP_ENV}
       APP_SECRET: ${ORDERS_APP_SECRET}
       PG_HOST: psql_orders
