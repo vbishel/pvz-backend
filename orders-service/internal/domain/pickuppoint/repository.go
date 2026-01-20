@@ -1,4 +1,4 @@
-package pickup_point
+package pickuppoint
 
 import "orders-service/internal/domain/city"
 
