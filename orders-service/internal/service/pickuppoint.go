@@ -1,4 +1,4 @@
-package pickuppoint
+package service
 
 import (
 	"context"
